@@ -14,7 +14,7 @@ import io
 import datetime
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')  # Para evitar problemas en entornos sin GUI
+matplotlib.use('Agg')  # Para evitar problemas de GUI en entornos sin pantalla
 
 app = Flask(__name__)
 
@@ -24,7 +24,7 @@ def calculate_time_difference(start, end):
     end_time = datetime.datetime.fromisoformat(end)
     return (end_time - start_time).total_seconds() / 60  # Diferencia en minutos
 
-# Ruta para manejar tanto sismogramas como helicorders
+# Ruta principal para manejar gráficos dinámicamente
 @app.route('/generate_graph', methods=['GET'])
 def generate_graph():
     try:
@@ -50,12 +50,56 @@ def generate_graph():
     except Exception as e:
         return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
 
+# Ruta para generar específicamente sismogramas
+@app.route('/generate_sismograma', methods=['GET'])
+def generate_sismograma_route():
+    try:
+        # Extraer parámetros de la solicitud
+        start = request.args.get('start')
+        end = request.args.get('end')
+        net = request.args.get('net')
+        sta = request.args.get('sta')
+        loc = request.args.get('loc')
+        cha = request.args.get('cha')
+
+        # Validar los parámetros
+        if not all([start, end, net, sta, loc, cha]):
+            return jsonify({"error": "Faltan parámetros requeridos"}), 400
+
+        # Llamar a la función de generación de sismogramas
+        return generate_sismograma(net, sta, loc, cha, start, end)
+
+    except Exception as e:
+        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+
+# Ruta para generar específicamente helicorders
+@app.route('/generate_helicorder', methods=['GET'])
+def generate_helicorder_route():
+    try:
+        # Extraer parámetros de la solicitud
+        start = request.args.get('start')
+        end = request.args.get('end')
+        net = request.args.get('net')
+        sta = request.args.get('sta')
+        loc = request.args.get('loc')
+        cha = request.args.get('cha')
+
+        # Validar los parámetros
+        if not all([start, end, net, sta, loc, cha]):
+            return jsonify({"error": "Faltan parámetros requeridos"}), 400
+
+        # Llamar a la función de generación de helicorders
+        return generate_helicorder(net, sta, loc, cha, start, end)
+
+    except Exception as e:
+        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+
 # Función para generar un sismograma
 def generate_sismograma(net, sta, loc, cha, start, end):
     try:
         # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
-
+        
         # Realizar la solicitud al servidor remoto
         response = requests.get(url)
         if response.status_code != 200:
@@ -97,7 +141,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
     try:
         # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
-
+        
         # Realizar la solicitud al servidor remoto
         response = requests.get(url)
         if response.status_code != 200:
