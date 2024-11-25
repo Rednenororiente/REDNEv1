@@ -167,7 +167,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
-        fig.savefig(output_image, format='png', dpi=150, bbox_inches="tight")
+        fig.savefig(output_image, format='png', dpi=120, bbox_inches="tight")
         output_image.seek(0)
         plt.close(fig)
 
