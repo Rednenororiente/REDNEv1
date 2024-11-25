@@ -13,7 +13,7 @@ import io
 import datetime
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')  # Para evitar problemas de GUI en entornos sin pantalla
+matplotlib.use('Agg')  # Para evitar problemas en entornos sin GUI
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ def calculate_time_difference(start, end):
     end_time = datetime.datetime.fromisoformat(end)
     return (end_time - start_time).total_seconds() / 60  # Diferencia en minutos
 
-# Ruta para generar sismograma o helicorder dinámicamente
+# Ruta para manejar tanto sismogramas como helicorders
 @app.route('/generate_graph', methods=['GET'])
 def generate_graph():
     try:
@@ -49,36 +49,15 @@ def generate_graph():
     except Exception as e:
         return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
 
-# Función para generar sismograma
-@app.route('/generate_sismograma', methods=['GET'])
-def generate_sismograma():
+# Función para generar un sismograma
+def generate_sismograma(net, sta, loc, cha, start, end):
     try:
-        # Obtener parámetros de la URL
-        net = request.args.get('net')
-        sta = request.args.get('sta')
-        loc = request.args.get('loc')
-        cha = request.args.get('cha')
-        start = request.args.get('start')
-        end = request.args.get('end')
-
-        # Registrar los parámetros recibidos para depuración
-        app.logger.info(f"Parámetros recibidos - net: {net}, sta: {sta}, loc: {loc}, cha: {cha}, start: {start}, end: {end}")
-
-        # Verificar que todos los parámetros requeridos están presentes
-        if not all([net, sta, loc, cha, start, end]):
-            app.logger.error("Faltan parámetros requeridos")
-            return jsonify({"error": "Faltan parámetros requeridos"}), 400
-
         # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
-        app.logger.info(f"URL de solicitud: {url}")
-
-        # Realizar la solicitud al servidor
+        
+        # Realizar la solicitud al servidor remoto
         response = requests.get(url)
-        app.logger.info(f"Respuesta de la solicitud: {response.status_code}")
-
         if response.status_code != 200:
-            app.logger.error(f"Error al descargar datos: {response.status_code}")
             return jsonify({"error": f"Error al descargar datos: {response.status_code}"}), 500
 
         # Procesar los datos MiniSEED
@@ -86,24 +65,39 @@ def generate_sismograma():
         try:
             st = read(mini_seed_data)
         except Exception as e:
-            app.logger.error(f"Error procesando MiniSEED: {e}")
             return jsonify({"error": f"Error procesando MiniSEED: {str(e)}"}), 500
 
-        # Resto del código...
-        app.logger.info("Procesamiento completado exitosamente")
+        # Crear gráfico del sismograma
+        tr = st[0]
+        start_time = tr.stats.starttime.datetime
+        times = [start_time + datetime.timedelta(seconds=sec) for sec in tr.times()]
+        data = tr.data
+
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.plot(times, data, color='black', linewidth=0.8)
+        ax.set_title(f"{start} - {end}")
+        ax.set_xlabel("Tiempo")
+        ax.set_ylabel("Amplitud")
+        fig.autofmt_xdate()
+
+        # Guardar el gráfico en memoria
+        output_image = io.BytesIO()
+        plt.savefig(output_image, format='png', dpi=120, bbox_inches="tight")
+        output_image.seek(0)
+        plt.close(fig)
+
+        return send_file(output_image, mimetype='image/png')
 
     except Exception as e:
-        app.logger.error(f"Error interno: {e}")
         return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
 
-
-# Función para generar helicorder
+# Función para generar un helicorder
 def generate_helicorder(net, sta, loc, cha, start, end):
     try:
-        # Construir la URL para descargar datos desde `osso.univalle.edu.co`
+        # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
-
-        # Solicitar los datos MiniSEED
+        
+        # Realizar la solicitud al servidor remoto
         response = requests.get(url)
         if response.status_code != 200:
             return jsonify({"error": f"Error al descargar datos: {response.status_code}"}), 500
@@ -115,7 +109,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         except Exception as e:
             return jsonify({"error": f"Error procesando MiniSEED: {str(e)}"}), 500
 
-        # Crear helicorder
+        # Crear helicorder utilizando ObsPy
         fig = st.plot(
             type="dayplot",
             interval=30,
@@ -137,6 +131,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
     except Exception as e:
         return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
 
-# Punto de entrada para el servidor Flask
+# Punto de entrada del servidor Flask
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
