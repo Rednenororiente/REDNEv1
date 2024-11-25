@@ -118,11 +118,18 @@ def generate_sismograma(net, sta, loc, cha, start, end):
         times = [start_time + datetime.timedelta(seconds=sec) for sec in tr.times()]
         data = tr.data
 
-        fig, ax = plt.subplots(figsize=(10, 4))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(times, data, color='black', linewidth=0.8)
         ax.set_title(f"{start} - {end}")
         ax.set_xlabel("Tiempo")
         ax.set_ylabel("Amplitud")
+        fig.autofmt_xdate()
+
+        # Agregar información de la estación en la esquina superior izquierda
+        station_info = f"{net}.{sta}.{loc}.{cha}"
+        ax.text(0.02, 0.98, station_info, transform=ax.transAxes, fontsize=10,verticalalignment='top', bbox=dict(facecolor='white', edgecolor='black'))
+
+        # Rotar las etiquetas del eje X para mayor claridad
         fig.autofmt_xdate()
 
         # Guardar el gráfico en memoria
@@ -163,6 +170,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
             color=['k', 'r', 'b'],
             show_y_UTC_label=True,
             one_tick_per_line=True
+            size=(12, 6)  # Ajustar el tamaño del gráfico
         )
 
         # Guardar el gráfico en memoria
