@@ -170,8 +170,11 @@ def generate_helicorder(net, sta, loc, cha, start, end):
             color=['k', 'r', 'b'],
             show_y_UTC_label=True,
             one_tick_per_line=True
-            size=(12, 6)  # Ajustar el tamaño del gráfico
+            #size=(12, 6)  # Ajustar el tamaño del gráfico
         )
+
+        # Ajustar el tamaño del helicorder (matplotlib se encarga del tamaño)
+        fig.set_size_inches(12, 6)  # Configura el tamaño del gráfico (ancho x alto)
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
