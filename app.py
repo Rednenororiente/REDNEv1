@@ -174,7 +174,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         )
 
         # Ajustar el tamaño del helicorder (matplotlib se encarga del tamaño)
-        fig.set_size_inches(12, 4)  # Configura el tamaño del gráfico (ancho x alto)
+        fig.set_size_inches(10, 6)  # Configura el tamaño del gráfico (ancho x alto)
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
