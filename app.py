@@ -164,7 +164,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         # Crear helicorder utilizando ObsPy
         fig = st.plot(
             type="dayplot",
-            interval=30,
+            interval=15,
             right_vertical_labels=True,
             vertical_scaling_range=2000,
             color=['k', 'r', 'b'],
