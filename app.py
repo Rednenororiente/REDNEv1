@@ -134,7 +134,7 @@ def generate_sismograma(net, sta, loc, cha, start, end):
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
-        plt.savefig(output_image, format='png', dpi=120, bbox_inches="tight")
+        plt.savefig(output_image, format='png', dpi=100, bbox_inches="tight")
         output_image.seek(0)
         plt.close(fig)
 
@@ -174,7 +174,7 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         )
 
         # Ajustar el tamaño del helicorder (matplotlib se encarga del tamaño)
-        fig.set_size_inches(12, 6)  # Configura el tamaño del gráfico (ancho x alto)
+        fig.set_size_inches(12, 4)  # Configura el tamaño del gráfico (ancho x alto)
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
