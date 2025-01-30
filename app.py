@@ -15,8 +15,10 @@ import datetime
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Para evitar problemas de GUI en entornos sin pantalla
+from flask_cors import CORS #problemas de idx (Agredado)
 
 app = Flask(__name__)
+CORS(app)  # Habilita CORS para todas las rutas(Agregado)
 
 # Función auxiliar para calcular la diferencia de tiempo
 def calculate_time_difference(start, end):
