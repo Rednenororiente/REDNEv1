@@ -122,10 +122,10 @@ def generate_sismograma(net, sta, loc, cha, start, end):
 
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(times, data, color='black', linewidth=0.8)
-        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica de Monitoreo REDNE\n{start} - {end}", fontsize=12)
+        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica de Monitoreo REDNE\n{start} - {end}", fontsize=5)
                                                             # ax.set_title(f"{start} - {end}")
-        ax.set_xlabel("Tiempo (UTC Colombia)", fontsize=10) #ax.set_xlabel("Tiempo")
-        ax.set_ylabel("Amplitud (M/s)", fontsize=10)        #ax.set_ylabel("Amplitud")
+        ax.set_xlabel("Tiempo (UTC Colombia)", fontsize=5) #ax.set_xlabel("Tiempo")
+        ax.set_ylabel("Amplitud (M/s)", fontsize=5)        #ax.set_ylabel("Amplitud")
         fig.autofmt_xdate()
 
         # Agregar información de la estación en la esquina superior izquierda
