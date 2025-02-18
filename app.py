@@ -179,6 +179,12 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         # Ajustar el tamaño del helicorder (matplotlib se encarga del tamaño)
         fig.set_size_inches(12, 4)  # Configura el tamaño del gráfico (ancho x alto)
 
+        # Informción en el Helicorder
+        ax = fig.gca()  # Obtener el eje actual (para agregar el texto)
+        ax.text(0.02, 1.05, "Universidad Industrial de Santander UIS", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        ax.text(0.02, 1.1, "Red Sísmica de Monitoreo REDNE", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        ax.text(0.02, 1.15, f"Estructura de la fecha de: {start} - {end}", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
         fig.savefig(output_image, format='png', dpi=120, bbox_inches="tight")
