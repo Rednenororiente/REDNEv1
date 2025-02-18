@@ -122,7 +122,7 @@ def generate_sismograma(net, sta, loc, cha, start, end):
 
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(times, data, color='black', linewidth=0.8)
-        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica de Monitoreo REDNE\n{start} - {end}") #, fontsize=5)
+        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica REDNE\n{start} - {end}") #, fontsize=5)
                                                             # ax.set_title(f"{start} - {end}")
         ax.set_xlabel("Tiempo (UTC Colombia)") #, fontsize=5) #ax.set_xlabel("Tiempo")
         ax.set_ylabel("Amplitud (M/s)") #, fontsize=5)        #ax.set_ylabel("Amplitud")
@@ -180,10 +180,10 @@ def generate_helicorder(net, sta, loc, cha, start, end):
         fig.set_size_inches(12, 4)  # Configura el tamaño del gráfico (ancho x alto)
 
         # Informción en el Helicorder
-        ax = fig.gca()  # Obtener el eje actual (para agregar el texto)
-        ax.text(0.02, 1.05, "Universidad Industrial de Santander UIS", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
-        ax.text(0.02, 1.1, "Red Sísmica de Monitoreo REDNE", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
-        ax.text(0.02, 1.15, f"Estructura de la fecha de: {start} - {end}", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        #ax = fig.gca()  # Obtener el eje actual (para agregar el texto)
+        #ax.text(0.02, 1.05, "Universidad Industrial de Santander UIS", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        #ax.text(0.02, 1.1, "Red Sísmica REDNE", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        #ax.text(0.02, 1.15, f"Estructura de la fecha de: {start} - {end}", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
