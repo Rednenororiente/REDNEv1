@@ -4,3 +4,4 @@ obspy
 requests
 matplotlib
 gunicorn
+gevent>=1.4
