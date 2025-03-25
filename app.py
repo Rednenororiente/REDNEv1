@@ -15,21 +15,32 @@ import datetime
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Para evitar problemas de GUI en entornos sin pantalla
-from flask_cors import CORS #problemas de idx (Agredado)
+from flask_cors import CORS
+import logging
 
 app = Flask(__name__)
-CORS(app)  # Habilita CORS para todas las rutas(Agregado)
+CORS(app)  # Habilita CORS para todas las rutas
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Función auxiliar para calcular la diferencia de tiempo
 def calculate_time_difference(start, end):
-    start_time = datetime.datetime.fromisoformat(start)
-    end_time = datetime.datetime.fromisoformat(end)
-    return (end_time - start_time).total_seconds() / 60  # Diferencia en minutos
+    try:
+        start_time = datetime.datetime.fromisoformat(start)
+        end_time = datetime.datetime.fromisoformat(end)
+        return (end_time - start_time).total_seconds() / 60  # Diferencia en minutos
+    except Exception as e:
+        logger.error(f"Error calculando diferencia de tiempo: {str(e)}")
+        raise
 
 # Ruta principal para manejar gráficos dinámicamente
 @app.route('/generate_graph', methods=['GET'])
 def generate_graph():
     try:
+        logger.info("Iniciando solicitud /generate_graph")
+        
         # Obtener parámetros de la solicitud
         start = request.args.get('start')
         end = request.args.get('end')
@@ -38,24 +49,41 @@ def generate_graph():
         loc = request.args.get('loc')
         cha = request.args.get('cha')
 
+        logger.info(f"Parámetros recibidos - start: {start}, end: {end}, net: {net}, sta: {sta}, loc: {loc}, cha: {cha}")
+
         # Verificar que todos los parámetros estén presentes
         if not all([start, end, net, sta, loc, cha]):
-            return jsonify({"error": "Faltan parámetros requeridos"}), 400
+            error_msg = "Faltan parámetros requeridos"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
 
         # Calcular la diferencia de tiempo para decidir el tipo de gráfico
-        interval_minutes = calculate_time_difference(start, end)
+        try:
+            interval_minutes = calculate_time_difference(start, end)
+            logger.info(f"Diferencia de tiempo calculada: {interval_minutes} minutos")
+        except Exception as e:
+            error_msg = f"Error calculando intervalo de tiempo: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
+
         if interval_minutes <= 30:
+            logger.info("Generando sismograma (intervalo ≤ 30 minutos)")
             return generate_sismograma(net, sta, loc, cha, start, end)
         else:
+            logger.info("Generando helicorder (intervalo > 30 minutos)")
             return generate_helicorder(net, sta, loc, cha, start, end)
 
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+        error_msg = f"Error inesperado en /generate_graph: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 500
 
 # Ruta para generar específicamente sismogramas
 @app.route('/generate_sismograma', methods=['GET'])
 def generate_sismograma_route():
     try:
+        logger.info("Iniciando solicitud /generate_sismograma")
+        
         # Extraer parámetros de la solicitud
         start = request.args.get('start')
         end = request.args.get('end')
@@ -64,20 +92,29 @@ def generate_sismograma_route():
         loc = request.args.get('loc')
         cha = request.args.get('cha')
 
+        logger.info(f"Parámetros recibidos - start: {start}, end: {end}, net: {net}, sta: {sta}, loc: {loc}, cha: {cha}")
+
         # Validar los parámetros
         if not all([start, end, net, sta, loc, cha]):
-            return jsonify({"error": "Faltan parámetros requeridos"}), 400
+            error_msg = "Faltan parámetros requeridos"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
 
         # Llamar a la función de generación de sismogramas
+        logger.info("Generando sismograma...")
         return generate_sismograma(net, sta, loc, cha, start, end)
 
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+        error_msg = f"Error inesperado en /generate_sismograma: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 500
 
 # Ruta para generar específicamente helicorders
 @app.route('/generate_helicorder', methods=['GET'])
 def generate_helicorder_route():
     try:
+        logger.info("Iniciando solicitud /generate_helicorder")
+        
         # Extraer parámetros de la solicitud
         start = request.args.get('start')
         end = request.args.get('end')
@@ -86,33 +123,53 @@ def generate_helicorder_route():
         loc = request.args.get('loc')
         cha = request.args.get('cha')
 
+        logger.info(f"Parámetros recibidos - start: {start}, end: {end}, net: {net}, sta: {sta}, loc: {loc}, cha: {cha}")
+
         # Validar los parámetros
         if not all([start, end, net, sta, loc, cha]):
-            return jsonify({"error": "Faltan parámetros requeridos"}), 400
+            error_msg = "Faltan parámetros requeridos"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 400
 
         # Llamar a la función de generación de helicorders
+        logger.info("Generando helicorder...")
         return generate_helicorder(net, sta, loc, cha, start, end)
 
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+        error_msg = f"Error inesperado en /generate_helicorder: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 500
 
 # Función para generar un sismograma
 def generate_sismograma(net, sta, loc, cha, start, end):
     try:
+        logger.info(f"Generando sismograma para: {net}.{sta}.{loc}.{cha}, {start} - {end}")
+        
         # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
+        logger.info(f"URL construida: {url}")
         
         # Realizar la solicitud al servidor remoto
-        response = requests.get(url)
+        logger.info("Realizando solicitud HTTP...")
+        response = requests.get(url, timeout=30)
+        
         if response.status_code != 200:
-            return jsonify({"error": f"Error al descargar datos: {response.status_code}"}), 500
+            error_msg = f"Error al descargar datos: {response.status_code}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500
+
+        logger.info(f"Datos descargados correctamente, tamaño: {len(response.content)} bytes")
 
         # Procesar los datos MiniSEED
         mini_seed_data = io.BytesIO(response.content)
         try:
+            logger.info("Procesando datos MiniSEED...")
             st = read(mini_seed_data)
+            logger.info(f"Datos MiniSEED procesados correctamente. Número de trazas: {len(st)}")
         except Exception as e:
-            return jsonify({"error": f"Error procesando MiniSEED: {str(e)}"}), 500
+            error_msg = f"Error procesando MiniSEED: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500
 
         # Crear gráfico del sismograma
         tr = st[0]
@@ -120,51 +177,75 @@ def generate_sismograma(net, sta, loc, cha, start, end):
         times = [start_time + datetime.timedelta(seconds=sec) for sec in tr.times()]
         data = tr.data
 
+        logger.info("Generando gráfico del sismograma...")
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(times, data, color='black', linewidth=0.8)
-        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica REDNE\n{start} - {end}") #, fontsize=5)
-                                                            # ax.set_title(f"{start} - {end}")
-        ax.set_xlabel("Tiempo (UTC Colombia)") #, fontsize=5) #ax.set_xlabel("Tiempo")
-        ax.set_ylabel("Amplitud (M/s)") #, fontsize=5)        #ax.set_ylabel("Amplitud")
+        ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica REDNE\n{start} - {end}")
+        ax.set_xlabel("Tiempo (UTC Colombia)")
+        ax.set_ylabel("Amplitud (M/s)")
         fig.autofmt_xdate()
 
-        # Agregar información de la estación en la esquina superior izquierda
+        # Agregar información de la estación
         station_info = f"{net}.{sta}.{loc}.{cha}"
-        ax.text(0.02, 0.98, station_info, transform=ax.transAxes, fontsize=10,verticalalignment='top', bbox=dict(facecolor='white', edgecolor='black'))
-
-        # Rotar las etiquetas del eje X para mayor claridad
-        fig.autofmt_xdate()
+        ax.text(0.02, 0.98, station_info, transform=ax.transAxes, 
+                fontsize=10, verticalalignment='top', 
+                bbox=dict(facecolor='white', edgecolor='black'))
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
         plt.savefig(output_image, format='png', dpi=100, bbox_inches="tight")
         output_image.seek(0)
         plt.close(fig)
+        logger.info("Gráfico del sismograma generado correctamente")
 
         return send_file(output_image, mimetype='image/png')
 
+    except requests.exceptions.Timeout:
+        error_msg = "Tiempo de espera agotado al conectar con el servidor OSSO"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 504
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error de conexión: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 503
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+        error_msg = f"Error inesperado al generar sismograma: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 500
 
 # Función para generar un helicorder
 def generate_helicorder(net, sta, loc, cha, start, end):
     try:
+        logger.info(f"Generando helicorder para: {net}.{sta}.{loc}.{cha}, {start} - {end}")
+        
         # Construir la URL para descargar datos
         url = f"http://osso.univalle.edu.co/fdsnws/dataselect/1/query?starttime={start}&endtime={end}&network={net}&station={sta}&location={loc}&channel={cha}&nodata=404"
+        logger.info(f"URL construida: {url}")
         
         # Realizar la solicitud al servidor remoto
-        response = requests.get(url)
+        logger.info("Realizando solicitud HTTP...")
+        response = requests.get(url, timeout=60)  # Mayor timeout para helicorders
+        
         if response.status_code != 200:
-            return jsonify({"error": f"Error al descargar datos: {response.status_code}"}), 500
+            error_msg = f"Error al descargar datos: {response.status_code}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500
+
+        logger.info(f"Datos descargados correctamente, tamaño: {len(response.content)} bytes")
 
         # Procesar los datos MiniSEED
         mini_seed_data = io.BytesIO(response.content)
         try:
+            logger.info("Procesando datos MiniSEED...")
             st = read(mini_seed_data)
+            logger.info(f"Datos MiniSEED procesados correctamente. Número de trazas: {len(st)}")
         except Exception as e:
-            return jsonify({"error": f"Error procesando MiniSEED: {str(e)}"}), 500
+            error_msg = f"Error procesando MiniSEED: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500
 
         # Crear helicorder utilizando ObsPy
+        logger.info("Generando gráfico helicorder...")
         fig = st.plot(
             type="dayplot",
             interval=15,
@@ -172,18 +253,13 @@ def generate_helicorder(net, sta, loc, cha, start, end):
             vertical_scaling_range=2000,
             color=['k', 'r', 'b'],
             show_y_UTC_label=True,
-            one_tick_per_line=True
-            #size=(12, 6)  # Ajustar el tamaño del gráfico
+            one_tick_per_line=True,
+            size=(12, 6)
         )
 
-        # Ajustar el tamaño del helicorder (matplotlib se encarga del tamaño)
-        fig.set_size_inches(12, 4)  # Configura el tamaño del gráfico (ancho x alto)
-
-        # Informción en el Helicorder
-        #ax = fig.gca()  # Obtener el eje actual (para agregar el texto)
-        #ax.text(0.02, 1.05, "Universidad Industrial de Santander UIS", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
-        #ax.text(0.02, 1.1, "Red Sísmica REDNE", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
-        #ax.text(0.02, 1.15, f"Estructura de la fecha de: {start} - {end}", transform=ax.transAxes, fontsize=10, verticalalignment='bottom', ha='left', color='black')
+        # Ajustar el tamaño del helicorder
+        fig.set_size_inches(12, 4)
+        logger.info("Gráfico helicorder generado correctamente")
 
         # Guardar el gráfico en memoria
         output_image = io.BytesIO()
@@ -193,9 +269,18 @@ def generate_helicorder(net, sta, loc, cha, start, end):
 
         return send_file(output_image, mimetype='image/png')
 
+    except requests.exceptions.Timeout:
+        error_msg = "Tiempo de espera agotado al conectar con el servidor OSSO"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 504
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error de conexión: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 503
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error: {str(e)}"}), 500
+        error_msg = f"Error inesperado al generar helicorder: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"error": error_msg}), 500
 
-# Punto de entrada del servidor Flask
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
