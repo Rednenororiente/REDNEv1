@@ -18,8 +18,26 @@ matplotlib.use('Agg')  # Para evitar problemas de GUI en entornos sin pantalla
 from flask_cors import CORS
 import logging
 
+# Configuración de estaciones para mostrar información
+STATIONS_CONFIG = {
+    "UIS01": {"location": "Los Santos,  Colombia-Santander", "channels": ["HNE", "HNN", "HNZ"]},
+    "UIS03": {"location": "Málaga,      Colombia-Santander", "channels": ["HNE", "HNN", "HNZ"]},
+    "UIS05": {"location": "Esmeralda-Bucaramanga, Colombia", "channels": ["EHZ", "ENE", "ENN", "ENZ"]},
+    "UIS04": {"location": "Pamplona,    Colombia-Norte de Santander", "channels": ["HNE", "HNN", "HNZ"]},
+    "UIS09": {"location": "Zapatoca,    Colombia-Santander", "channels": ["ENE", "ENN", "ENZ"]},
+    "UIS11": {"location": "Chitagá,     Colombia-Norte de Santander", "channels": ["ENE", "ENN", "ENZ"]},
+    "UIS10": {"location": "Macaravita,  Colombia-Santander", "channels": ["ENE", "ENN", "ENZ"]},
+    "UIS06": {"location": "San Alberto, Colombia-Santander", "channels": ["ENE", "ENN", "ENZ"]}
+}
+
+
 app = Flask(__name__)
 CORS(app)  # Habilita CORS para todas las rutas
+
+# Conversión del UTC a hora local Colombia(UTC-5)N
+def utc_to_colombia(utc_dt):
+    """Convierte un datetime UTC a hora de Colombia (UTC-5)"""
+    return utc_dt - datetime.timedelta(hours=5)
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -181,10 +199,33 @@ def generate_sismograma(net, sta, loc, cha, start, end):
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(times, data, color='black', linewidth=0.8)
         ax.set_title(f"Universidad Industrial de Santander UIS\nRed Sísmica REDNE\n{start} - {end}")
+        
+        #Información de estación y canal, Buscar la ubicación de la estación
+        station_location = STATIONS_CONFIG.get(sta, {}).get("location", "Ubicación desconocida")
+        # Texto a mostrar
+        est_info = f"Estación: {sta} - Canal: {cha}\n{station_location}"
+        # Mostrar debajo del título
+        ax.text(0.5, 1.02, est_info, transform=ax.transAxes, fontsize=11, ha='center', va='bottom', color='navy')
+        # 
+        
+
         ax.set_xlabel("Tiempo (UTC Colombia)")
         ax.set_ylabel("Amplitud (M/s)")
         fig.autofmt_xdate()
 
+        # Mostrar tiempo UTC Colombia debajo del eje X, Convertir a datetime los strings de inicio y fin
+        start_dt = datetime.datetime.fromisoformat(start)
+        end_dt = datetime.datetime.fromisoformat(end)
+        # Convertir a hora Colombia
+        start_col = utc_to_colombia(start_dt)
+        end_col = utc_to_colombia(end_dt)
+        # Texto a mostrar
+        utc_col_text = f"Tiempo Colombia (UTC-5): {start_col.strftime('%Y-%m-%d %H:%M:%S')} a {end_col.strftime('%Y-%m-%d %H:%M:%S')}"
+        # Mostrar debajo del eje X
+        fig.text(0.5, 0.01, utc_col_text, ha='center', fontsize=10, color='darkgreen')
+        # 
+
+        
         # Agregar información de la estación
         station_info = f"{net}.{sta}.{loc}.{cha}"
         ax.text(0.02, 0.98, station_info, transform=ax.transAxes, 
